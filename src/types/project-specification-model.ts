@@ -1,0 +1,31 @@
+export interface ProjectSpecificationModel {
+  id: number;
+  category1: string;
+  category2: string;
+  complexity_id: number | null;
+  complexity_name: string;
+  component_id: number | null;
+  component_name: string;
+  function_id: number | null;
+  function_name: string;
+  parent_id: number | null;
+  parent_name: string;
+  priority_id: number | null;
+  priority_name: string;
+  process_id: number | null;
+  process_name: string;
+  progress: number | null;
+  project_id: number;
+  project_name: string;
+  specification_content: string;
+  specification_dependencies: string;
+  specification_fullpath: string;
+  specification_id: number;
+  specification_interface: string;
+  specification_name: string;
+  specification_order: number | null;
+  specification_revision_change_summary: string;
+  specification_source: string;
+  specification_type: string;
+  specification_version: string;
+}

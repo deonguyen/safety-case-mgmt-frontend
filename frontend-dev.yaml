@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sq-spec-portal-frontend-dev
+  labels:
+    app: frontend-dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend-dev
+  template:
+    metadata:
+      labels:
+        app: frontend-dev
+    spec:
+      containers:
+      - name: frontend-dev
+        image: sq-spec-portal-frontend-dev:latest 
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3002
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-dev-service
+spec:
+  selector:
+    app: frontend-dev
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3002
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: frontend-dev-ingress
+spec:
+  ingressClassName: envoy-proxy
+  rules:
+  - host: dev.localhost
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend-dev-service
+            port:
+              number: 80
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: frontend-dev-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: sq-spec-portal-frontend-dev
+  minReplicas: 1
+  maxReplicas: 2
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 75
