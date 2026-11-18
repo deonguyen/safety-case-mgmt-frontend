@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sq-spec-portal-frontend-prod
+  labels:
+    app: frontend-prod
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: frontend-prod
+  template:
+    metadata:
+      labels:
+        app: frontend-prod
+    spec:
+      containers:
+      - name: frontend-prod
+        # Replace with your actual container registry image, e.g., your-registry/sq-spec-portal-frontend-prod:latest
+        image: sq-spec-portal-frontend-prod:latest 
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3000
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        # Uncomment and configure if you need runtime environment variables via ConfigMap or Secret
+        # envFrom:
+        #   - configMapRef:
+        #       name: frontend-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-prod-service
+spec:
+  selector:
+    app: frontend-prod
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: frontend-prod-ingress
+spec:
+  ingressClassName: envoy-proxy
+  rules:
+  - host: localhost
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend-prod-service
+            port:
+              number: 80
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: frontend-prod-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: sq-spec-portal-frontend-prod
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 75

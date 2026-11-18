@@ -1,0 +1,52 @@
+name: Clear GitHub Actions Cache
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Branch/ref to clear caches for (leave blank to clear ALL caches in the repo)"
+        required: false
+        default: ""
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  clear-cache:
+    name: Clear Actions Cache
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clear caches via gh CLI
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          REF: ${{ inputs.ref }}
+        run: |
+          set -euo pipefail
+
+          if [ -n "$REF" ]; then
+            echo "Listing caches for ref: $REF"
+            mapfile -t IDS < <(gh api --paginate \
+              -H "Accept: application/vnd.github+json" \
+              "/repos/$REPO/actions/caches?ref=$REF&per_page=100" \
+              --jq '.actions_caches[].id')
+          else
+            echo "Listing ALL caches in $REPO"
+            mapfile -t IDS < <(gh api --paginate \
+              -H "Accept: application/vnd.github+json" \
+              "/repos/$REPO/actions/caches?per_page=100" \
+              --jq '.actions_caches[].id')
+          fi
+
+          echo "Found ${#IDS[@]} cache entries"
+
+          for id in "${IDS[@]}"; do
+            [ -z "$id" ] && continue
+            echo "Deleting cache id=$id"
+            gh api -X DELETE \
+              -H "Accept: application/vnd.github+json" \
+              "/repos/$REPO/actions/caches/$id"
+          done
+
+          echo "Done."

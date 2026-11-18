@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  traefik:
+    image: traefik:v3.6.13
+    container_name: traefik
+    environment:
+      - DOCKER_API_VERSION=1.44
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:3002"
+    ports:
+      - "3082:3002"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      args:
+        ENV_FILE: .env.dev
+    image: sq-spec-portal-frontend-dev
+    env_file:
+      - .env.dev
+    volumes:
+      - .:/app # Mount local source code for fast-refresh
+      - /app/node_modules # Isolate node_modules to the container's linux build
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`localhost`)"
+      - "traefik.http.routers.frontend.entrypoints=web"
+      - "traefik.http.services.frontend.loadbalancer.server.port=3002" # Internal dev server port

@@ -1,0 +1,23 @@
+FROM node:26-alpine
+
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+
+# Install dependencies
+COPY package.json package-lock.json* ./
+RUN npm ci
+
+# Remove all environment files copied over from the host
+RUN rm -f .env*
+
+# Accept custom env file name as a build argument
+ARG ENV_FILE=.env.dev
+COPY ${ENV_FILE} .env.dev
+
+# We skip copying the source code here.
+# When running this container, mount your local directory to /app to enable hot-reloading.
+
+EXPOSE 3002
+ENV PORT=3002
+ENV HOSTNAME="0.0.0.0"
+CMD ["npm", "run", "dev"]

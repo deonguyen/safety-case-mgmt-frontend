@@ -1,0 +1,67 @@
+{
+  "family": "frontend-task-definition-stage",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+  "executionRoleArn": "arn:aws:iam::673515369016:role/frontend-task-execution-role-stage",
+  "taskRoleArn": "arn:aws:iam::673515369016:role/frontend-task-role-stage",
+  "containerDefinitions": [
+    {
+      "name": "frontend-container-stage",
+      "image": "673515369016.dkr.ecr.us-east-1.amazonaws.com/sq-spec-portal-frontend-repos-stage:stage",
+      "essential": true,
+      "cpu": 256,
+      "memory": 512,
+      "environment": [
+        {
+          "name": "DJANGO_API_HOST",
+          "value": "http://backend-alb-stage-1388285832.us-east-1.elb.amazonaws.com"
+        },
+        {
+          "name": "SPEC_API_HOST",
+          "value": "http://backend-alb-stage-1388285832.us-east-1.elb.amazonaws.com"
+        },
+        {
+          "name": "SNAPSHOT_API_HOST",
+          "value": "http://backend-alb-stage-1388285832.us-east-1.elb.amazonaws.com"
+        },
+        {
+          "name": "HOST",
+          "value": "0.0.0.0"
+        },
+        {
+          "name": "PORT",
+          "value": "3002"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/sq-spec-portal-frontend-ecs-log-group-stage",
+          "awslogs-region": "us-east-1",
+          "awslogs-create-group": "true",
+          "awslogs-stream-prefix": "frontend-container-stage"
+        }
+      },
+      "portMappings": [
+        {
+          "name": "frontend-3002-tcp",
+          "containerPort": 3002,
+          "hostPort": 3002,
+          "protocol": "tcp"
+        }
+      ],
+      "healthCheck": {
+        "command": [
+          "CMD-SHELL",
+          "curl -f http://127.0.0.1:3002/api/health || exit 1"
+        ],
+        "interval": 30,
+        "timeout": 10,
+        "retries": 3,
+        "startPeriod": 120
+      }
+    }
+  ]
+}
