@@ -44,6 +44,7 @@ import {
 } from "@/src/services/traceability-service";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronDown, faChevronRight } from "@fortawesome/free-solid-svg-icons";
+import { auth } from "@/auth";
 
 const categoryChartConfig = {
   count: { label: "Count" },
@@ -372,6 +373,19 @@ function GsnTreeItem({
     if (allExpanded !== null) {
       setIsOpen(allExpanded);
     }
+
+    // const session = await auth();
+
+    // if (!session) {
+    //   return <p>Access Denied. Please sign in.</p>;
+    // }
+
+    // // Use the accessToken to query your backend API or Microsoft Graph
+    // const apiResponse = await fetch("https://api.yourdomain.com/data", {
+    //   headers: {
+    //     Authorization: `Bearer ${session.accessToken}`,
+    //   },
+    // });
   }, [allExpanded]);
 
   const typeBadge = useMemo(() => {
